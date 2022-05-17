@@ -1,2 +1,2 @@
 A = "Hello World";
-print(A)
+print(A);

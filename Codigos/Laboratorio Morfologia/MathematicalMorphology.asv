@@ -51,6 +51,7 @@ BW1 = imdilate(f,se) - imerode(f,se);
 imshow(BW1), title('Gradient')
 
 % la imagen se mira mas oscura, los pixeles blancos se ven reducidos
+% se pueden
 % Use different disk size
 
 %% Preprocess the Image The Rice Matlab Example

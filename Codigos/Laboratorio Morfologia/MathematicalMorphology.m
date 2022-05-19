@@ -10,6 +10,7 @@ f=f/max(max(f));
 f=imresize(f,0.25);
 figure(1)
 imshow(f,[]);
+title('imagen original')
 
 %% Dilatation
 %La funcion dilate, dilata la imagen dejandola un poco borrosa
@@ -25,8 +26,9 @@ imshow(BW2), title('Dilated')
 se = strel('disk',5);
 BW3 = imerode(f,se);
 imshow(BW3), title('Eroded')%parece que los pixeles se reducen y se hacen grandes
+figure;
 % Use different disk size
-imshowpair(BW2,BW3,'montage') % la diferencia es que uno resalta mas los claros y otra los oscuros
+imshowpair(BW2,BW3,'montage'), title('comparativa') % la diferencia es que uno resalta mas los claros y otra los oscuros
 %% Opening
 %Esta funcion utiliza ambas funcionces, erosion al inicio y dilatacion posteriormente, en la misma
 %imagen, abriendo la escala de grises
@@ -57,7 +59,7 @@ imshow(BW1), title('Gradient')
 % Read an image into the workspace.
 
 I = imread('rice.png');
-imshow(I)
+imshow(I), title('imagen original')
 %% 
 % The background illumination is brighter in the center of the image than at 
 % the bottom. Preprocess the image to make the background illumination more uniform.

@@ -41,7 +41,7 @@ BW2 = imclose(f,se);
 imshow(BW2), title('Closing')
 % Use different disk size
 %% Gradient
-
+%Esta funcion dilata la escala de grises
 se = strel('disk',1);
 BW1 = imdilate(f,se) - imerode(f,se);
 imshow(BW1), title('Gradient')

@@ -4,6 +4,7 @@ f = imread('radiograph1.jpg');
 f = double(f(:,:,1));
 f = f/max(max(f));
 f = imresize(f,0.15);
+title('Radiografia')
 figure(1)
 imshow(f,[]);
 %% Thresholding
@@ -17,7 +18,7 @@ imshow(seg1.*f,[])
 
 imhist(f)
 % Use a third threshold based on the histogram
-%% 
+
 %% Otsu method
 
 thr = graythresh(f)
@@ -47,8 +48,12 @@ imshow(f+edgemap,[0,1]);
 
 % Do the same procedure but now with 5 centers.
 % Is the segmentation better?
+%Although the number of centers increases, the segmentation seems to be
+%better at 3 centers
 %% Watershed segmentation
 %Detector de Orillas y distancia entre ellos
+%Se cambio el metodo de detector de orillas "Sobel", sin embargo, el
+%metodo "Canny" da una imagen mas limpia
 edgeC = edge(f,'Sobel');
 imshow(edgeC,[])
 D = bwdist(edgeC);

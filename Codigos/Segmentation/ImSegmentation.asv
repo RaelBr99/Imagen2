@@ -1,4 +1,6 @@
-f = imread('radiograph1(1).jpg');
+%%Equipo: Isabela Resendez, Andrea Corrales, Rael Barragan, Juan Diego
+%%Garcia
+f = imread('radiograph1.jpg');
 f = double(f(:,:,1));
 f = f/max(max(f));
 f = imresize(f,0.15);
@@ -15,7 +17,7 @@ imshow(seg1.*f,[])
 
 imhist(f)
 % Use a third threshold based on the histogram
-%% 
+
 %% Otsu method
 
 thr = graythresh(f)
@@ -31,7 +33,8 @@ imshow(f+edgemap,[0,1]);
 % Do you trust the Otsu treshold?
 % Select your own image and compute the otsu threshold
 %% Kmeans segmentation
-
+%Trabaja con el numero y tipo de clases
+%Se podran observar diferentes centros y orillas
 [L,Centers] = imsegkmeans(int8(255*f),3);
 B = labeloverlay(f,L);
 imshow(B)
@@ -44,9 +47,13 @@ imshow(f+edgemap,[0,1]);
 
 % Do the same procedure but now with 5 centers.
 % Is the segmentation better?
+%Although the number of centers increases, the segmentation seems to be
+%better at 3 centers
 %% Watershed segmentation
-
-edgeC = edge(f,'Canny');
+%Detector de Orillas y distancia entre ellos
+%Se cambio el metodo de detector de orillas "Sobel", sin embargo, el
+%metodo "Canny" da una imagen mas limpia
+edgeC = edge(f,'Sobel');
 imshow(edgeC,[])
 D = bwdist(edgeC);
 imshow(D,[])

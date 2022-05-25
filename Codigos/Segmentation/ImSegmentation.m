@@ -1,6 +1,6 @@
 %%Equipo: Isabela Resendez, Andrea Corrales, Rael Barragan, Juan Diego
 %%Garcia
-f = imread('radiograph1.jpg');
+f = imread('rick.jpg');
 f = double(f(:,:,1));
 f = f/max(max(f));
 f = imresize(f,0.15);

@@ -10,12 +10,14 @@ f=f/max(max(f));
 f=imresize(f,0.25);
 figure(1)
 imshow(f,[]);
+title('imagen original')
 
 %% Dilatation
 %La funcion dilate, dilata la imagen dejandola un poco borrosa
 se = strel('disk',5);
-BW2 = imdilate(f,se);
-imshow(BW2), title('Dilated')
+BW2 = imdilate(f,se); % se determina el valor de dilatación
+imshow(BW2), title('Dilated') 
+
 % Use different disk size
 %% Erosion
 %Esta funcion resalta los espacios en aires, dandose a notar mas los
@@ -23,35 +25,41 @@ imshow(BW2), title('Dilated')
 
 se = strel('disk',5);
 BW3 = imerode(f,se);
-imshow(BW3), title('Eroded')
+imshow(BW3), title('Eroded')%parece que los pixeles se reducen y se hacen grandes
+figure;
 % Use different disk size
-imshowpair(BW2,BW3,'montage')
+imshowpair(BW2,BW3,'montage'), title('comparativa') % la diferencia es que uno resalta mas los claros y otra los oscuros
 %% Opening
 %Esta funcion utiliza ambas funcionces, erosion al inicio y dilatacion posteriormente, en la misma
 %imagen, abriendo la escala de grises
 se = strel('disk',7);
 BW2 = imopen(f,se);
 imshow(BW2), title('Opening')
+%crea una borrosidad en toda la imagen que hace que no se vean los bordes
 % Use different disk size
 %% Closing
 %Esta funcion utiliza ambas funcionces, dilatacion al inicio y erosion posteriormente, en la misma
 %imagen, cerrando la escala de grises
 se = strel('disk',7);
 BW2 = imclose(f,se);
-imshow(BW2), title('Closing')
+imshow(BW2), title('Closing') 
+% lo borroso ahora ya tiene un poco mas de definición sin embargo se mira
+% mucha sombra en los bordes de la imagen
 % Use different disk size
 %% Gradient
-
+%Esta funcion dilata la escala de grises
 se = strel('disk',1);
 BW1 = imdilate(f,se) - imerode(f,se);
 imshow(BW1), title('Gradient')
+
+% la imagen se mira mas oscura, los pixeles blancos se ven reducidos
 % Use different disk size
 
 %% Preprocess the Image The Rice Matlab Example
 % Read an image into the workspace.
 
 I = imread('rice.png');
-imshow(I)
+imshow(I), title('imagen original')
 %% 
 % The background illumination is brighter in the center of the image than at 
 % the bottom. Preprocess the image to make the background illumination more uniform.

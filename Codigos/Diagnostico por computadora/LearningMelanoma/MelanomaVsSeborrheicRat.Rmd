@@ -1,0 +1,332 @@
+---
+title: "MelanomavsSeborreic"
+author: "Jose Tamez"
+date: "4/9/2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, warning = FALSE, message = FALSE,comment = "#>")
+
+```
+
+## Melanoma vs Seborreic_Keratosis
+
+
+```{r functions,echo = FALSE }
+
+library("FRESA.CAD")
+library("e1071")
+library("fastAdaboost")
+
+```
+
+## Loading data sets
+
+```{r FRESA Map, results = "hide", dpi=300, fig.height= 6.0, fig.width= 8.0}
+op <- par(no.readonly = TRUE)
+
+MelanomaFeatures <- read.csv("E:/SKINCCANCER/MatlabScripts/MelanomaLesionFeatures.csv", header=FALSE)
+SeborrheicFeatures <- read.csv("E:/SKINCCANCER/MatlabScripts/SeborrheicLesionFeatures.csv", header=FALSE)
+NevusFeatures <- read.csv("E:/SKINCCANCER/MatlabScripts/NevusLesionFeatures.csv", header=FALSE)
+MelanomaControlFeatures <- read.csv("E:/SKINCCANCER/MatlabScripts/MelanomaControlFeatures.csv", header=FALSE)
+SeborrheicControlFeatures <- read.csv("E:/SKINCCANCER/MatlabScripts/SeborrheicControlFeatures.csv", header=FALSE)
+NevusControlFeatures <- read.csv("E:/SKINCCANCER/MatlabScripts/NevusControlFeatures.csv", header=FALSE)
+
+colnames(MelanomaControlFeatures) <- paste("C",colnames(MelanomaControlFeatures),sep="")
+colnames(SeborrheicControlFeatures) <- paste("C",colnames(SeborrheicControlFeatures),sep="")
+colnames(NevusControlFeatures) <- paste("C",colnames(NevusControlFeatures),sep="")
+
+
+sum(is.na(MelanomaFeatures))
+sum(is.na(SeborrheicFeatures))
+sum(is.na(NevusFeatures))
+sum(is.na(MelanomaControlFeatures))
+sum(is.na(NevusControlFeatures))
+
+channel1 <- c(1:30)
+channel2 <- c(31:60)
+channel3 <- c(61:90)
+
+MMelanomaFeatures <- (  MelanomaFeatures[,channel1] +
+                        MelanomaFeatures[,channel2] +
+                        MelanomaFeatures[,channel3] )/3.0
+SMelanomaFeatures <- (  abs(MelanomaFeatures[,channel1] - MMelanomaFeatures) +
+                        abs(MelanomaFeatures[,channel2] - MMelanomaFeatures) +
+                        abs(MelanomaFeatures[,channel3] - MMelanomaFeatures) )/3.0
+
+colnames(MMelanomaFeatures) <- paste("M",colnames(MMelanomaFeatures),sep="")
+colnames(SMelanomaFeatures) <- paste("S",colnames(SMelanomaFeatures),sep="")
+
+MelanomaFeatures <- cbind(MelanomaFeatures,SMelanomaFeatures)
+
+MNevusFeatures <- (  NevusFeatures[,channel1] +
+                        NevusFeatures[,channel2] +
+                        NevusFeatures[,channel3] )/3.0
+SNevusFeatures <- (  abs(NevusFeatures[,channel1] - MNevusFeatures) +
+                        abs(NevusFeatures[,channel2] - MNevusFeatures) +
+                        abs(NevusFeatures[,channel3] - MNevusFeatures) )/3.0
+
+colnames(MNevusFeatures) <- paste("M",colnames(MNevusFeatures),sep="")
+colnames(SNevusFeatures) <- paste("S",colnames(SNevusFeatures),sep="")
+
+NevusFeatures <- cbind(NevusFeatures,SNevusFeatures)
+
+
+MSeborrheicFeatures <- (  SeborrheicFeatures[,channel1] +
+                          SeborrheicFeatures[,channel2] +
+                          SeborrheicFeatures[,channel3] )/3.0
+SSeborrheicFeatures <- (abs(SeborrheicFeatures[,channel1] - MSeborrheicFeatures) +
+                        abs(SeborrheicFeatures[,channel2] - MSeborrheicFeatures) +
+                        abs(SeborrheicFeatures[,channel3] - MSeborrheicFeatures))/3.0
+colnames(MSeborrheicFeatures) <- paste("M",colnames(MSeborrheicFeatures),sep="")
+colnames(SSeborrheicFeatures) <- paste("S",colnames(SSeborrheicFeatures),sep="")
+
+SeborrheicFeatures <- cbind(SeborrheicFeatures,SSeborrheicFeatures)
+
+MMelanomaControlFeatures <- (  MelanomaControlFeatures[,channel1] +
+                               MelanomaControlFeatures[,channel2] +
+                               MelanomaControlFeatures[,channel3] )/3.0
+
+SMelanomaControlFeatures <- (abs(MelanomaControlFeatures[,channel1] - MMelanomaControlFeatures) +
+                             abs(MelanomaControlFeatures[,channel2] - MMelanomaControlFeatures) +
+                             abs(MelanomaControlFeatures[,channel3] - MMelanomaControlFeatures))/3.0
+colnames(MMelanomaControlFeatures) <- paste("M",colnames(MMelanomaControlFeatures),sep="")
+colnames(SMelanomaControlFeatures) <- paste("S",colnames(SMelanomaControlFeatures),sep="")
+
+
+MelanomaControlFeatures <- cbind(MelanomaControlFeatures,SMelanomaControlFeatures)
+
+MNevusControlFeatures <- (  NevusControlFeatures[,channel1] +
+                               NevusControlFeatures[,channel2] +
+                               NevusControlFeatures[,channel3] )/3.0
+SNevusControlFeatures <- (abs(NevusControlFeatures[,channel1] - MNevusControlFeatures) +
+                             abs(NevusControlFeatures[,channel2] - MNevusControlFeatures) +
+                             abs(NevusControlFeatures[,channel3] - MNevusControlFeatures))/3.0
+colnames(MNevusControlFeatures) <- paste("M",colnames(MNevusControlFeatures),sep="")
+colnames(SNevusControlFeatures) <- paste("S",colnames(SNevusControlFeatures),sep="")
+
+NevusControlFeatures <- cbind(NevusControlFeatures,SNevusControlFeatures)
+
+
+MSeborrheicControlFeatures <- (  SeborrheicControlFeatures[,channel1] +
+                                 SeborrheicControlFeatures[,channel2] +
+                                 SeborrheicControlFeatures[,channel3] )/3.0
+SSeborrheicControlFeatures <- (abs(SeborrheicControlFeatures[,channel1] - MSeborrheicControlFeatures) +
+                               abs(SeborrheicControlFeatures[,channel2] - MSeborrheicControlFeatures) +
+                               abs(SeborrheicControlFeatures[,channel3] - MSeborrheicControlFeatures))/3.0
+colnames(MSeborrheicControlFeatures) <- paste("M",colnames(MSeborrheicControlFeatures),sep="")
+colnames(SSeborrheicControlFeatures) <- paste("S",colnames(SSeborrheicControlFeatures),sep="")
+
+SeborrheicControlFeatures <- cbind(SeborrheicControlFeatures,SSeborrheicControlFeatures)
+
+
+#ctrRatio <- MelanomaFeatures/MelanomaControlFeatures;
+#ctrRatio[abs(MelanomaControlFeatures) < 1.0e-6] <- 1.0e6*MelanomaFeatures[abs(MelanomaControlFeatures) < 1.0e-6]
+
+ctrRatio <- MelanomaFeatures - MelanomaControlFeatures;
+colnames(ctrRatio) <- colnames(MelanomaControlFeatures)
+MelanomaFeatures <- cbind(MelanomaFeatures,ctrRatio) 
+
+#ctrRatio <- NevusFeatures/NevusControlFeatures;
+#ctrRatio[abs(NevusControlFeatures) < 1.0e-6] <- 1.0e6*NevusFeatures[abs(NevusControlFeatures) < 1.0e-6]
+ctrRatio <- NevusFeatures - NevusControlFeatures;
+colnames(ctrRatio) <- colnames(NevusControlFeatures)
+NevusFeatures <- cbind(NevusFeatures,ctrRatio) 
+
+#ctrRatio <- SeborrheicFeatures/SeborrheicControlFeatures;
+#ctrRatio[abs(SeborrheicControlFeatures) < 1.0e-6] <- 1.0e6*SeborrheicFeatures[abs(SeborrheicControlFeatures) < 1.0e-6]
+
+ctrRatio <- SeborrheicFeatures - SeborrheicControlFeatures;
+colnames(ctrRatio) <- colnames(SeborrheicControlFeatures)
+SeborrheicFeatures <- cbind(SeborrheicFeatures,ctrRatio)
+
+MelanomaFeatures <- MelanomaFeatures[complete.cases(MelanomaFeatures),]
+NevusFeatures <- NevusFeatures[complete.cases(NevusFeatures),]
+SeborrheicFeatures <- SeborrheicFeatures[complete.cases(SeborrheicFeatures),]
+
+
+MelanomaFeatures$Class <- rep(1,nrow(MelanomaFeatures))
+NevusFeatures$Class <- rep(0,nrow(NevusFeatures))
+SeborrheicFeatures$Class <- rep(0,nrow(SeborrheicFeatures))
+
+
+#MelanomaSeborrheicNevus <- rbind(MelanomaFeatures,SeborrheicFeatures,NevusFeatures)
+MelanomaSeborrheicNevus <- rbind(MelanomaFeatures,SeborrheicFeatures)
+#MelanomaSeborrheicNevus <- rbind(MelanomaFeatures,NevusFeatures)
+
+table(MelanomaSeborrheicNevus$Class)
+
+
+```
+
+## The Heatmap
+```{r, dpi=300, fig.height= 6.0, fig.width= 8.0}
+par(op)
+
+boxplot(MelanomaSeborrheicNevus)
+
+hm <- heatMaps(Outcome = "Class",
+               data = MelanomaSeborrheicNevus,
+               title = "Heat Map:",Scale = TRUE,
+               hCluster = "col",cexRow = 0.75,cexCol = 0.5,srtCol = 45)
+
+par(op)
+```
+
+## Learning Melanoma with KNN
+
+```{r}
+cvKNN <- randomCV(MelanomaSeborrheicNevus,"Class",
+               KNN_method,
+               trainFraction = 0.80,
+               repetitions = 100,
+               classSamplingType = "Pro",
+               featureSelectionFunction = univariate_KS,
+               featureSelection.control = list(pvalue=0.05,limit= -1),
+               kn=5
+               )
+
+```
+
+## Plot performance
+
+```{r}
+performace <- predictionStats_binary(cvKNN$medianTest,"KNN")
+par(op)
+
+```
+
+```{r}
+cvSVM <- randomCV(MelanomaSeborrheicNevus,"Class",
+               e1071::svm,
+               asFactor = TRUE,
+               trainFraction = 0.80,
+               repetitions = 100,
+               classSamplingType = "Pro",
+               featureSelectionFunction = univariate_KS,
+               featureSelection.control = list(pvalue=0.05,limit= -1),
+               probability=TRUE
+               )
+
+```
+
+## SVM performance
+
+```{r}
+performace <- predictionStats_binary(cvSVM$medianTest,"SVM")
+par(op)
+
+```
+
+## Learning Melanoma with Naive Bayes
+
+```{r}
+
+cvNB <- randomCV(MelanomaSeborrheicNevus,"Class",
+               NAIVE_BAYES,
+               trainFraction = 0.80,
+               repetitions = 100,
+               classSamplingType = "Pro",
+               featureSelectionFunction = univariate_KS,
+               featureSelection.control = list(pvalue=0.05,limit=0.1),
+#               pca=FALSE
+               )
+
+```
+
+## Plot performance
+
+```{r}
+performace <- predictionStats_binary(cvNB$medianTest,"Naive Bayes")
+par(op)
+
+```
+
+```{r}
+
+cvNBBE <- randomCV(MelanomaSeborrheicNevus,"Class",
+               NAIVE_BAYES,
+               trainFraction = 0.80,
+               repetitions = 100,
+               featureSelectionFunction = univariate_BinEnsemble,
+               featureSelection.control = list(pvalue=0.01,limit=0.1),
+               )
+
+```
+
+## Plot performance
+
+```{r}
+performace <- predictionStats_binary(cvNBBE$medianTest,"Naive Bayes BE")
+par(op)
+
+```
+
+
+## Learning Melanoma with Adaboost
+
+```{r}
+cvADA <- randomCV(MelanomaSeborrheicNevus,"Class",
+               adaboost,
+               trainFraction = 0.80, 
+               repetitions = 100,
+               classSamplingType = "Pro",
+               nIter=50)
+
+```
+
+## Plot performance
+
+```{r}
+performace <- predictionStats_binary(cvADA$medianTest,"Adaboost")
+par(op)
+
+```
+
+
+```{r}
+
+DeMelanomaSeborrheicNevus <- featureDecorrelation(MelanomaSeborrheicNevus,Outcome="Class",thr=0.975)
+```
+
+
+## The Heatmap
+```{r, dpi=300, fig.height= 6.0, fig.width= 8.0}
+
+boxplot(DeMelanomaSeborrheicNevus)
+
+hm <- heatMaps(Outcome = "Class",
+               data = DeMelanomaSeborrheicNevus,
+               title = "Heat Map:",Scale = TRUE,
+               hCluster = "col",cexRow = 0.75,cexCol = 0.5,srtCol = 45)
+
+par(op)
+
+```
+
+
+## Learning Melanoma with Naive Bayes
+
+```{r}
+
+cvDENB <- randomCV(DeMelanomaSeborrheicNevus,"Class",
+               NAIVE_BAYES,
+               trainFraction = 0.80,
+               repetitions = 100,
+               featureSelectionFunction = univariate_KS,
+               featureSelection.control = list(pvalue=0.05,limit=0.10),
+               )
+
+```
+
+## Plot performance
+
+```{r}
+performace <- predictionStats_binary(cvDENB$medianTest,"Decorrelated Naive Bayes")
+par(op)
+
+```
+
